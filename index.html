@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cosmic Daily — Dashboard Énergétique</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+  body{ font-family:'Inter',sans-serif; background:radial-gradient(ellipse at top,#12142b 0%,#05060f 60%,#000 100%); }
+  .font-mystic{ font-family:'Cinzel',serif; }
+  .card{ background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01)); border:1px solid rgba(212,175,120,0.18); backdrop-filter:blur(6px); }
+  .glow-gold{ text-shadow:0 0 12px rgba(212,175,120,0.5); }
+  .star{ position:absolute; background:#fff; border-radius:50%; opacity:.6; animation:tw 4s infinite ease-in-out; }
+  @keyframes tw{0%,100%{opacity:.15}50%{opacity:.9}}
+  ::-webkit-scrollbar{width:0px}
+</style>
+</head>
+<body class="min-h-screen text-stone-200 max-w-md mx-auto relative overflow-x-hidden">
+
+<div id="stars" class="fixed inset-0 pointer-events-none z-0"></div>
+
+<main class="relative z-10 px-4 pb-16 pt-6 space-y-4">
+
+  <!-- HEADER -->
+  <header class="text-center space-y-1 mb-2">
+    <h1 class="font-mystic text-2xl text-amber-300 glow-gold tracking-wide">✧ Cosmic Daily ✧</h1>
+    <p id="today-date" class="text-sm text-stone-400 capitalize"></p>
+  </header>
+
+  <!-- MODULE 1 : TZOLKIN (Cholq'ij K'iche') -->
+  <section class="card rounded-2xl p-4 space-y-1">
+    <h2 class="font-mystic text-amber-300 text-sm tracking-widest uppercase">🔺 Calendrier Maya · Tzolk'in</h2>
+    <div class="flex items-center gap-4 mt-2">
+      <div id="maya-glyph" class="text-5xl">🌱</div>
+      <div>
+        <p id="maya-kin" class="text-lg font-semibold text-amber-200"></p>
+        <p id="maya-name" class="text-stone-300 text-sm"></p>
+      </div>
+    </div>
+    <p id="maya-desc" class="text-xs text-stone-400 mt-2 leading-relaxed"></p>
+    <p class="text-[10px] text-stone-500 italic mt-1">Calendrier Cholq'ij (nomenclature K'iche'), calé sur une date de référence connue.</p>
+  </section>
+
+  <!-- MODULE 2 : LUNE -->
+  <section class="card rounded-2xl p-4">
+    <h2 class="font-mystic text-amber-300 text-sm tracking-widest uppercase">🌙 Phase Lunaire</h2>
+    <div class="flex items-center gap-4 mt-2">
+      <div id="moon-icon" class="text-5xl"></div>
+      <div>
+        <p id="moon-name" class="text-lg font-semibold text-blue-200"></p>
+        <p id="moon-illum" class="text-sm text-stone-400"></p>
+        <p id="moon-sign" class="text-sm text-blue-300 mt-0.5"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULE 3 : PHENOMENES -->
+  <section class="card rounded-2xl p-4">
+    <h2 class="font-mystic text-amber-300 text-sm tracking-widest uppercase">☄️ Phénomènes Astronomiques</h2>
+    <ul id="events-list" class="mt-2 space-y-2 text-sm"></ul>
+  </section>
+
+  <!-- MODULE 4 : PANCHANGAM VEDIQUE -->
+  <section class="card rounded-2xl p-4">
+    <h2 class="font-mystic text-amber-300 text-sm tracking-widest uppercase">🕉️ Panchangam Védique</h2>
+    <div id="panchang-grid" class="grid grid-cols-1 gap-3 mt-2 text-sm"></div>
+    <p class="text-[10px] text-stone-500 italic mt-2">Positions sidérales (ayanamsa Lahiri, formule simplifiée) — précision de l'ordre du degré.</p>
+  </section>
+
+  <!-- MODULE 5 : GITA -->
+  <section class="card rounded-2xl p-4">
+    <h2 class="font-mystic text-amber-300 text-sm tracking-widest uppercase">📜 Sagesse de la Bhagavad Gita</h2>
+    <p id="gita-ref" class="text-amber-200 text-xs mt-2 tracking-wide"></p>
+    <p id="gita-verse" class="italic text-stone-200 mt-1 leading-relaxed"></p>
+    <p id="gita-iast" class="text-xs text-amber-400/80 mt-2 leading-relaxed font-mystic"></p>
+  </section>
+
+  <footer class="text-center text-[10px] text-stone-600 pt-4">✨ que les astres te guide ✨</footer>
+</main>
+
+<script>
+/* ---------- Fond étoilé décoratif ---------- */
+const starsEl = document.getElementById('stars');
+for(let i=0;i<40;i++){
+  const s=document.createElement('div');
+  s.className='star';
+  s.style.width=s.style.height=(Math.random()*2+1)+'px';
+  s.style.top=Math.random()*100+'%';
+  s.style.left=Math.random()*100+'%';
+  s.style.animationDelay=(Math.random()*4)+'s';
+  starsEl.appendChild(s);
+}
+
+const today = new Date();
+document.getElementById('today-date').textContent =
+  today.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+/* ================================================================
+   MODULE 1 — TZOLK'IN MAYA (Cholq'ij, nomenclature K'iche')
+   ----------------------------------------------------------------
+   CORRECTION : l'ancienne formule utilisait la corrélation GMT
+   générique (584283), qui ne correspondait pas aux valeurs
+   affichées par mayskystromzivota.cz (nomenclature K'iche', pas
+   Yucatèque, et décalage de calibration).
+   Nouvelle méthode, robuste et vérifiable : on part d'une DATE DE
+   RÉFÉRENCE CONNUE et vérifiée — le 27 septembre 2026 = "1 Q'anil"
+   (confirmé sur mayskystromzivota.cz) — puis on calcule le nombre
+   de jours écoulés depuis cette date pour trouver le kin exact de
+   n'importe quel autre jour. Si le site de référence change sa
+   calibration un jour, il suffit de mettre à jour REFERENCE_DATE
+   et REFERENCE_KIN_INDEX ci-dessous.
+   ================================================================ */
+const daySigns = [ // 20 signes du Cholq'ij, ordre K'iche'
+  {n:"Imox",   g:"🐊", d:"Énergie primordiale, intuition, dualité, monde des rêves."},
+  {n:"Iq'",    g:"💨", d:"Souffle, esprit, communication, renouveau."},
+  {n:"Aq'ab'al",g:"🌒", d:"Aube et obscurité, introspection, seuils."},
+  {n:"K'at",   g:"🕸️", d:"Filet, réseau, libération des entraves."},
+  {n:"Kan",    g:"🐍", d:"Serpent, énergie vitale, sagesse, sexualité créatrice."},
+  {n:"Kame",   g:"💀", d:"Mort, transformation, lâcher-prise, ancêtres."},
+  {n:"Kej",    g:"🦌", d:"Cerf, force tranquille, leadership, harmonie."},
+  {n:"Q'anil", g:"🌱", d:"Graine, fertilité, croissance, création de vie nouvelle."},
+  {n:"Toj",    g:"🔥", d:"Offrande, gratitude, équilibre karmique."},
+  {n:"Tz'i'",  g:"🐕", d:"Loyauté, justice, loi, fidélité."},
+  {n:"B'atz'", g:"🧶", d:"Fil du temps, créativité, art, continuité."},
+  {n:"E",      g:"🛤️", d:"Chemin, destinée, guide, décision de route."},
+  {n:"Aj",     g:"🎋", d:"Foyer, autorité, roseau, structure intérieure."},
+  {n:"I'x",    g:"🐆", d:"Jaguar, magie, force de la Terre, félinité silencieuse."},
+  {n:"Tz'ikin",g:"🦅", d:"Oiseau, abondance, vision élevée, messages."},
+  {n:"Ajmaq",  g:"🕯️", d:"Pardon, péché, sagesse des ancêtres."},
+  {n:"No'j",   g:"🧠", d:"Savoir, intelligence, pensée, harmonie mentale."},
+  {n:"Tijax",  g:"🔪", d:"Silex, clarté tranchante, guérison, vérité."},
+  {n:"Kawoq",  g:"⛈️", d:"Tempête, communauté, famille, force collective."},
+  {n:"Ajpu",   g:"☀️", d:"Soleil, maîtrise, chasseur, accomplissement."}
+];
+const REFERENCE_DATE = Date.UTC(2026, 8, 27); // 27 septembre 2026 (mois 0-indexé : 8 = septembre)
+const REFERENCE_KIN_INDEX = 247; // correspond à "1 Q'anil" (tone 1, signe Q'anil)
+
+function getTzolkin(d){
+  const dUTC = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round((dUTC - REFERENCE_DATE) / 86400000);
+  const kinIndex = ((REFERENCE_KIN_INDEX + diffDays) % 260 + 260) % 260;
+  const tone = (kinIndex % 13) + 1;
+  const sign = daySigns[kinIndex % 20];
+  return { tone, sign, position: kinIndex + 1 }; // position 1-260 dans le cycle
+}
+const tz = getTzolkin(today);
+document.getElementById('maya-glyph').textContent = tz.sign.g;
+document.getElementById('maya-kin').textContent = `${tz.tone} ${tz.sign.n}`;
+document.getElementById('maya-name').textContent = `Jour ${tz.position} / 260 du Tzolk'in`;
+document.getElementById('maya-desc').textContent = tz.sign.d;
+
+/* ================================================================
+   Fonctions astronomiques partagées (formules simplifiées, basses
+   précision — usage "signe" uniquement, pas de calcul d'éphémérides
+   de haute précision).
+   ================================================================ */
+function daysSinceJ2000(d){
+  // J2000.0 = 1er janvier 2000, 12h00 UTC
+  return (d.getTime() - Date.UTC(2000,0,1,12,0,0)) / 86400000;
+}
+function normDeg(x){ return ((x % 360) + 360) % 360; }
+
+// Longitude écliptique apparente du Soleil (tropicale), formule Meeus simplifiée
+function sunLongitude(d){
+  const n = daysSinceJ2000(d);
+  const L = normDeg(280.460 + 0.9856474 * n);
+  const g = normDeg(357.528 + 0.9856003 * n) * Math.PI/180;
+  return normDeg(L + 1.915*Math.sin(g) + 0.020*Math.sin(2*g));
+}
+// Longitude écliptique de la Lune (tropicale), formule simplifiée
+function moonLongitude(d){
+  const n = daysSinceJ2000(d);
+  const L = normDeg(218.316 + 13.176396 * n);
+  const M = normDeg(134.963 + 13.064993 * n) * Math.PI/180;
+  return normDeg(L + 6.289*Math.sin(M));
+}
+// Ayanamsa Lahiri approximatif (précession ~50.3"/an), pour convertir tropical → sidéral
+function lahiriAyanamsa(d){
+  const years = daysSinceJ2000(d) / 365.25;
+  return 23.85 + 0.01397 * years;
+}
+
+const westernSigns = [
+  {n:"Bélier",i:"♈"},{n:"Taureau",i:"♉"},{n:"Gémeaux",i:"♊"},{n:"Cancer",i:"♋"},
+  {n:"Lion",i:"♌"},{n:"Vierge",i:"♍"},{n:"Balance",i:"♎"},{n:"Scorpion",i:"♏"},
+  {n:"Sagittaire",i:"♐"},{n:"Capricorne",i:"♑"},{n:"Verseau",i:"♒"},{n:"Poissons",i:"♓"}
+];
+function signFromLongitude(lon, arr){ return arr[Math.floor(normDeg(lon)/30) % 12]; }
+
+/* ---------- MODULE 2 : Phase lunaire + signe zodiacal de la Lune ---------- */
+function moonPhase(d){
+  const synodic = 29.53058867;
+  const knownNewMoon = Date.UTC(2000,0,6,18,14);
+  let diff = (d.getTime()-knownNewMoon)/86400000;
+  let phase = (diff % synodic)/synodic;
+  if(phase<0) phase+=1;
+  return phase;
+}
+function moonPhaseInfo(phase){
+  const illum = Math.round((1-Math.cos(2*Math.PI*phase))/2*100);
+  let name,icon;
+  if(phase<0.03||phase>0.97){name="Nouvelle Lune";icon="🌑";}
+  else if(phase<0.22){name="Premier Croissant";icon="🌒";}
+  else if(phase<0.28){name="Premier Quartier";icon="🌓";}
+  else if(phase<0.47){name="Lune Gibbeuse Croissante";icon="🌔";}
+  else if(phase<0.53){name="Pleine Lune";icon="🌕";}
+  else if(phase<0.72){name="Lune Gibbeuse Décroissante";icon="🌖";}
+  else if(phase<0.78){name="Dernier Quartier";icon="🌗";}
+  else {name="Dernier Croissant";icon="🌘";}
+  return {name,icon,illum};
+}
+const mp = moonPhaseInfo(moonPhase(today));
+document.getElementById('moon-icon').textContent = mp.icon;
+document.getElementById('moon-name').textContent = mp.name;
+document.getElementById('moon-illum').textContent = `Luminosité : ${mp.illum}%`;
+
+// Signe zodiacal tropical (occidental) de la Lune, ex. "Lune en Taureau"
+const moonSignW = signFromLongitude(moonLongitude(today), westernSigns);
+document.getElementById('moon-sign').textContent = `${moonSignW.i} Lune en ${moonSignW.n}`;
+
+/* ---------- MODULE 3 : Phénomènes astronomiques ---------- */
+const year = today.getFullYear();
+const events = [
+  {name:"Pluie d'étoiles filantes Quadrantides", date:new Date(year,0,3)},
+  {name:"Équinoxe de printemps", date:new Date(year,2,20)},
+  {name:"Pluie d'étoiles filantes Lyrides", date:new Date(year,3,22)},
+  {name:"Pluie d'étoiles filantes Êta Aquarides", date:new Date(year,4,5)},
+  {name:"Solstice d'été", date:new Date(year,5,21)},
+  {name:"Pluie d'étoiles filantes Perséides", date:new Date(year,7,12)},
+  {name:"Équinoxe d'automne", date:new Date(year,8,22)},
+  {name:"Pluie d'étoiles filantes Orionides", date:new Date(year,9,21)},
+  {name:"Pluie d'étoiles filantes Léonides", date:new Date(year,10,17)},
+  {name:"Pluie d'étoiles filantes Géminides", date:new Date(year,11,14)},
+  {name:"Solstice d'hiver", date:new Date(year,11,21)}
+].sort((a,b)=>a.date-b.date);
+const upcoming = events.filter(e=>e.date>=today).slice(0,3);
+const list = document.getElementById('events-list');
+(upcoming.length?upcoming:events.slice(0,3)).forEach(e=>{
+  const li=document.createElement('li');
+  li.className="flex justify-between border-b border-amber-900/20 pb-1";
+  li.innerHTML = `<span>✨ ${e.name}</span><span class="text-stone-400">${e.date.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</span>`;
+  list.appendChild(li);
+});
+
+/* ================================================================
+   MODULE 4 — PANCHANGAM VÉDIQUE (sidéral, ayanamsa Lahiri)
+   ----------------------------------------------------------------
+   CORRECTION : l'ancienne version faisait tourner des listes
+   génériques en fonction du jour de l'année (aucun lien avec la
+   position réelle du Soleil/Lune). Ici, Soorya Rasi, Chandra Rasi
+   et Nakshatra sont dérivés des longitudes écliptiques réelles du
+   Soleil et de la Lune, converties en sidéral via l'ayanamsa Lahiri.
+   ================================================================ */
+const rasiNames = ["Mesha","Vrishabha","Mithuna","Karka","Simha","Kanya","Tula","Vrischika","Dhanu","Makara","Kumbha","Meena"];
+const nakshatras = ["Ashwini","Bharani","Krittika","Rohini","Mrigashira","Ardra","Punarvasu","Pushya","Ashlesha","Magha","Purva Phalguni","Uttara Phalguni","Hasta","Chitra","Swati","Vishakha","Anuradha","Jyeshtha","Mula","Purva Ashadha","Uttara Ashadha","Shravana","Dhanishta","Shatabhisha","Purva Bhadrapada","Uttara Bhadrapada","Revati"];
+
+const ayan = lahiriAyanamsa(today);
+const sunSidLon = normDeg(sunLongitude(today) - ayan);
+const moonSidLon = normDeg(moonLongitude(today) - ayan);
+
+const sooryaRasi = rasiNames[Math.floor(sunSidLon/30) % 12];
+const chandraRasi = rasiNames[Math.floor(moonSidLon/30) % 12];
+const nakshatra = nakshatras[Math.floor(moonSidLon/(360/27)) % 27];
+
+const panchangData = [
+  {label:"Soorya Rasi (Soleil)", value: sooryaRasi},
+  {label:"Chandra Rasi (Lune)", value: chandraRasi},
+  {label:"Nakshatra (Lune)", value: nakshatra}
+];
+const pGrid = document.getElementById('panchang-grid');
+panchangData.forEach(({label,value})=>{
+  const d=document.createElement('div');
+  d.className="bg-black/20 rounded-lg p-3 flex justify-between items-center";
+  d.innerHTML = `<span class="text-[11px] text-amber-400 uppercase tracking-wider">${label}</span><span class="text-stone-200 font-semibold">${value}</span>`;
+  pGrid.appendChild(d);
+});
+
+/* ================================================================
+   MODULE 5 — BHAGAVAD GITA (traduction + translittération IAST)
+   ================================================================ */
+const gitaVerses = [
+  {ref:"Chapitre 2, Verset 47", verse:"Tu as droit à l'action, jamais à ses fruits.",
+   iast:"karmaṇy evādhikāras te mā phaleṣu kadācana | mā karma-phala-hetur bhūr mā te saṅgo 'stv akarmaṇi ||"},
+  {ref:"Chapitre 2, Verset 14", verse:"Les contacts des sens engendrent chaud et froid, plaisir et douleur ; ils vont et viennent, sois patient.",
+   iast:"mātrā-sparśās tu kaunteya śītoṣṇa-sukha-duḥkha-dāḥ | āgamāpāyino 'nityās tāṁs titikṣasva bhārata ||"},
+  {ref:"Chapitre 4, Verset 7", verse:"Chaque fois que le dharma décline, je m'incarne pour rétablir l'équilibre.",
+   iast:"yadā yadā hi dharmasya glānir bhavati bhārata | abhyutthānam adharmasya tadātmānaṁ sṛjāmy aham ||"},
+  {ref:"Chapitre 6, Verset 5", verse:"Que l'homme s'élève par son propre mental, non qu'il s'abaisse.",
+   iast:"uddhared ātmanātmānaṁ nātmānam avasādayet | ātmaiva hy ātmano bandhur ātmaiva ripur ātmanaḥ ||"},
+  {ref:"Chapitre 18, Verset 66", verse:"Abandonne toute forme de dharma et réfugie-toi en Moi seul.",
+   iast:"sarva-dharmān parityajya mām ekaṁ śaraṇaṁ vraja | ahaṁ tvāṁ sarva-pāpebhyo mokṣayiṣyāmi mā śucaḥ ||"},
+  {ref:"Chapitre 3, Verset 35", verse:"Mieux vaut son propre devoir imparfait que le devoir d'autrui parfaitement accompli.",
+   iast:"śreyān sva-dharmo viguṇaḥ para-dharmāt sv-anuṣṭhitāt | sva-dharme nidhanaṁ śreyaḥ para-dharmo bhayāvahaḥ ||"},
+  {ref:"Chapitre 2, Verset 20", verse:"L'âme ne naît ni ne meurt jamais ; elle est éternelle, permanente et primordiale.",
+   iast:"na jāyate mriyate vā kadācin nāyaṁ bhūtvā bhavitā vā na bhūyaḥ | ajo nityaḥ śāśvato 'yaṁ purāṇo na hanyate hanyamāne śarīre ||"},
+  {ref:"Chapitre 6, Verset 19", verse:"Comme une flamme à l'abri du vent ne vacille pas, ainsi le yogi au mental maîtrisé.",
+   iast:"yathā dīpo nivāta-stho neṅgate sopamā smṛtā | yogino yata-cittasya yuñjato yogam ātmanaḥ ||"},
+  {ref:"Chapitre 2, Versets 62-63", verse:"De l'attachement naît le désir, du désir la colère, de la colère l'égarement.",
+   iast:"dhyāyato viṣayān puṁsaḥ saṅgas teṣūpajāyate | saṅgāt sañjāyate kāmaḥ kāmāt krodho 'bhijāyate ||"},
+  {ref:"Chapitre 12, Verset 15", verse:"Celui qui ne trouble ni n'est troublé par le monde M'est cher.",
+   iast:"yasmān nodvijate loko lokān nodvijate ca yaḥ | harṣāmarṣa-bhayodvegair mukto yaḥ sa ca me priyaḥ ||"},
+  {ref:"Chapitre 3, Verset 19", verse:"Accomplis toujours ton devoir sans attachement ; ainsi tu atteins le Suprême.",
+   iast:"tasmād asaktaḥ satataṁ kāryaṁ karma samācara | asakto hy ācaran karma param āpnoti pūruṣaḥ ||"},
+  {ref:"Chapitre 9, Verset 22", verse:"À ceux qui M'adorent avec dévotion exclusive, Je pourvois ce qui manque et préserve ce qu'ils ont.",
+   iast:"ananyāś cintayanto māṁ ye janāḥ paryupāsate | teṣāṁ nityābhiyuktānāṁ yoga-kṣemaṁ vahāmy aham ||"},
+  {ref:"Chapitre 2, Verset 48", verse:"Établi dans le yoga, accomplis ton action, abandonnant l'attachement, égal dans le succès et l'échec.",
+   iast:"yoga-sthaḥ kuru karmāṇi saṅgaṁ tyaktvā dhanañjaya | siddhy-asiddhyoḥ samo bhūtvā samatvaṁ yoga ucyate ||"}
+];
+function dayOfYear(d){
+  const start = new Date(Date.UTC(d.getFullYear(),0,0));
+  return Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-start)/86400000);
+}
+const gitaIndex = dayOfYear(today) % gitaVerses.length;
+document.getElementById('gita-ref').textContent = gitaVerses[gitaIndex].ref;
+document.getElementById('gita-verse').textContent = `« ${gitaVerses[gitaIndex].verse} »`;
+document.getElementById('gita-iast').textContent = gitaVerses[gitaIndex].iast;
+</script>
+</body>
+</html>
